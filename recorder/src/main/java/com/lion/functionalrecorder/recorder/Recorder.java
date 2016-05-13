@@ -1,11 +1,6 @@
 package com.lion.functionalrecorder.recorder;
 
-import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.util.Log;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by lion on 5/11/16.
@@ -16,8 +11,6 @@ public class Recorder {
     private Settings settings;
     private boolean prepared = false;
     private boolean isRecording = false;
-    TimerTask timerTask;
-    Timer timer;
 
     public Recorder() {
     }
@@ -56,7 +49,6 @@ public class Recorder {
         try {
             mediaRecorder.start();
             isRecording = true;
-            timer.schedule(timerTask, 1l);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -65,8 +57,6 @@ public class Recorder {
     public void stopRecording() {
         if (isRecording) {
             try {
-                timerTask.cancel();
-                timer.cancel();
                 isRecording = !isRecording;
                 prepared = false;
 
