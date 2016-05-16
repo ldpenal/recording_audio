@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.lion.functionalrecorder.player.AudioPlayer;
 import com.lion.functionalrecorder.recorder.AudioBitRate;
 import com.lion.functionalrecorder.recorder.AudioChannel;
 import com.lion.functionalrecorder.recorder.Recorder;
@@ -23,9 +24,11 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.tv_state) TextView tvState;
     @BindView(R.id.btn_recorder) Button btnRecorder;
+    @BindView(R.id.btn_play) Button btnPlay;
 
     private Recorder recorder;
     private Settings.Builder recorderSettings;
+    AudioPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,18 +39,29 @@ public class MainActivity extends AppCompatActivity {
 
         recorder = new Recorder();
 
-        recorderSettings= new Settings.Builder()
-                .channelsAmount(AudioChannel.STEREO)
-                .encodingBitRate(AudioBitRate.ENCODING_HIGH)
-                .samplingBitRate(AudioBitRate.SAMPLING_48khz)
-                .customFileName(true)
-                .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
+//        recorderSettings= new Settings.Builder()
+//                .channelsAmount(AudioChannel.STEREO)
+//                .encodingBitRate(AudioBitRate.ENCODING_HIGH)
+//                .samplingBitRate(AudioBitRate.SAMPLING_48khz)
+//                .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
+
+        player = new AudioPlayer(this, null);
+        player.prepare("/storage/emulated/0/Documents/videoplayback.mp4");
+
+        player.seek(60);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         recorder.onDestroy();
+        player.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        player.pause();
     }
 
     @OnClick(R.id.btn_recorder)
@@ -77,6 +91,23 @@ public class MainActivity extends AppCompatActivity {
                 btnRecorder.setTag("record");
 
                 recorder.stopRecording();
+                break;
+        }
+    }
+
+    @OnClick(R.id.btn_play)
+    public void onClick(View v) {
+        String tag = (String) v.getTag();
+
+        switch (tag) {
+            case "play":
+                player.play();
+                btnPlay.setTag("pause");
+                break;
+
+            case "pause":
+                player.pause();
+                btnPlay.setTag("play");
                 break;
         }
     }
