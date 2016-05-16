@@ -39,16 +39,13 @@ public class MainActivity extends AppCompatActivity {
 
         recorder = new Recorder();
 
-//        recorderSettings= new Settings.Builder()
-//                .channelsAmount(AudioChannel.STEREO)
-//                .encodingBitRate(AudioBitRate.ENCODING_HIGH)
-//                .samplingBitRate(AudioBitRate.SAMPLING_48khz)
-//                .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
+        recorderSettings= new Settings.Builder()
+                .channelsAmount(AudioChannel.STEREO)
+                .encodingBitRate(AudioBitRate.ENCODING_HIGH)
+                .samplingBitRate(AudioBitRate.SAMPLING_48khz)
+                .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
 
         player = new AudioPlayer(this, null);
-        player.prepare("/storage/emulated/0/Documents/videoplayback.mp4");
-
-        player.seek(60);
     }
 
     @Override
@@ -71,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         switch (tag) {
             case "record":
                 try {
+                    player.prepare(recorder.getSettings().getAbsolutePath());
                     recorder.prepare(recorderSettings.build());
                 } catch (IOException e) {
                     e.printStackTrace();
