@@ -13,6 +13,8 @@ import com.lion.functionalrecorder.recorder.AudioChannel;
 import com.lion.functionalrecorder.recorder.Recorder;
 import com.lion.functionalrecorder.recorder.Settings;
 
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 .channelsAmount(AudioChannel.STEREO)
                 .encodingBitRate(AudioBitRate.ENCODING_HIGH)
                 .samplingBitRate(AudioBitRate.SAMPLING_48khz)
+                .customFileName(true)
                 .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
     }
 
@@ -55,7 +58,11 @@ public class MainActivity extends AppCompatActivity {
             case "record":
                 try {
                     recorder.prepare(recorderSettings.build());
-                } catch (Exception e) {
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (Settings.FileNameIllegalState fileNameIllegalState) {
+                    fileNameIllegalState.printStackTrace();
+                } catch (Settings.DirectoryException e) {
                     e.printStackTrace();
                 }
 

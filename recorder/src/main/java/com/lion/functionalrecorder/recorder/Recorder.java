@@ -2,6 +2,8 @@ package com.lion.functionalrecorder.recorder;
 
 import android.media.MediaRecorder;
 
+import java.io.IOException;
+
 /**
  * Created by lion on 5/11/16.
  */
@@ -15,7 +17,7 @@ public class Recorder {
     public Recorder() {
     }
 
-    public void prepare(Settings settings) throws Exception {
+    public void prepare(Settings settings) throws IllegalStateException, IOException {
         if (settings == null) {
             throw new IllegalStateException("Settings not provided to MediaRecord;");
         }

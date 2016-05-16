@@ -16,9 +16,11 @@ public class Settings {
     private AudioChannel audioChannel;
     private String filePath;
     private String fileName;
+    private boolean customFileName;
 
-    public Settings(AudioChannel audioChannel, AudioBitRate encodingBitRate, String fileName, String filePath, AudioBitRate samplingBitRate) {
+    public Settings(AudioChannel audioChannel, boolean customFileName, AudioBitRate encodingBitRate, String fileName, String filePath, AudioBitRate samplingBitRate) {
         this.audioChannel = audioChannel;
+        this.customFileName = customFileName;
         this.encodingBitRate = encodingBitRate;
         this.fileName = fileName;
         this.filePath = filePath;
@@ -56,11 +58,16 @@ public class Settings {
         private AudioChannel audioChannel;
         private String filePath;
         private String fileName;
+        private boolean customFileName;
 
         public Builder() {
             encodingBitRate = AudioBitRate.DEFAULT_ENCODING;
             samplingBitRate = AudioBitRate.DEFAULT_SAMPLING;
             audioChannel = AudioChannel.DEFAULT_CHANNELS;
+            customFileName = false;
+
+            fileName = "";
+            filePath = "";
         }
 
         public Builder encodingBitRate(AudioBitRate bitRate) {
@@ -78,7 +85,7 @@ public class Settings {
             return this;
         }
 
-        protected Builder fileName(String fileName) {
+        public Builder fileName(String fileName) {
             this.fileName = fileName;
             return this;
         }
@@ -88,9 +95,37 @@ public class Settings {
             return this;
         }
 
-        public Settings build() {
-            fileName(System.currentTimeMillis() + ".mp4");
-            return new Settings(audioChannel, encodingBitRate, fileName, filePath, samplingBitRate);
+        public Builder customFileName(boolean customFileName) {
+            this.customFileName = customFileName;
+            return this;
+        }
+
+        public Settings build() throws FileNameIllegalState, DirectoryException {
+            if (!customFileName) {
+                fileName(System.currentTimeMillis() + ".mp4");
+            }
+
+            if ("".equals(fileName))
+                throw new FileNameIllegalState("The file name was not provided");
+
+            if ("".equals(filePath))
+                throw new DirectoryException("The file directory was not provided");
+
+            return new Settings(audioChannel, customFileName, encodingBitRate, fileName, filePath, samplingBitRate);
+        }
+    }
+
+    public static class FileNameIllegalState extends Exception {
+
+        public FileNameIllegalState(String detailMessage) {
+            super(detailMessage);
+        }
+    }
+
+    public static class DirectoryException extends Exception {
+
+        public DirectoryException(String detailMessage) {
+            super(detailMessage);
         }
     }
 }
