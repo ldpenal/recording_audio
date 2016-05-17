@@ -3,6 +3,8 @@ package com.lion.functionalrecorder;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,7 +16,9 @@ import com.lion.functionalrecorder.recorder.AudioChannel;
 import com.lion.functionalrecorder.recorder.Recorder;
 import com.lion.functionalrecorder.recorder.Settings;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,10 +29,15 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.tv_state) TextView tvState;
     @BindView(R.id.btn_recorder) Button btnRecorder;
     @BindView(R.id.btn_play) Button btnPlay;
+    @BindView(R.id.rv_test) RecyclerView rvTests;
 
     private Recorder recorder;
     private Settings.Builder recorderSettings;
-    AudioPlayer player;
+    private AudioPlayer player;
+
+    private String file = Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents");
+
+    private Adapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,15 +46,56 @@ public class MainActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        recorder = new Recorder();
+        initRecycler();
+        loadUrls();
 
+        recorder = new Recorder();
         recorderSettings= new Settings.Builder()
                 .channelsAmount(AudioChannel.STEREO)
                 .encodingBitRate(AudioBitRate.ENCODING_HIGH)
                 .samplingBitRate(AudioBitRate.SAMPLING_48khz)
-                .filePath(Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents"));
+                .filePath(file);
 
         player = new AudioPlayer(this, null);
+    }
+
+    private void loadUrls() {
+        File [] files = new File(file).listFiles();
+        ArrayList<Item> items = new ArrayList<>();
+
+        for (File f: files) {
+            Item item = new Item(f.getName(), f.getAbsolutePath());
+            items.add(item);
+        }
+
+        adapter.addItems(items);
+        adapter.notifyDataSetChanged();
+    }
+
+    private void initRecycler() {
+        adapter = new Adapter(new RecordHolder.ItemClicked() {
+            @Override
+            public void play(int percentage, int position) {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+
+                player.prepare(adapter.getItems().get(position).getUrl());
+                player.seek(percentage);
+                player.play();
+            }
+
+            @Override
+            public void removeIfPlaying(Item item) {
+                if (player.isPlaying() && item.getUrl().equals(player.getDataSource())) {
+                    player.stop();
+                }
+            }
+        });
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        rvTests.setLayoutManager(linearLayoutManager);
+        rvTests.setAdapter(adapter);
     }
 
     @Override
@@ -58,7 +108,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        player.pause();
+        if (player != null) {
+            player.pause();
+        }
+        recorder.onDestroy();
     }
 
     @OnClick(R.id.btn_recorder)
@@ -68,14 +121,13 @@ public class MainActivity extends AppCompatActivity {
         switch (tag) {
             case "record":
                 try {
-                    player.prepare(recorder.getSettings().getAbsolutePath());
                     recorder.prepare(recorderSettings.build());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Settings.FileNameIllegalState fileNameIllegalState) {
-                    fileNameIllegalState.printStackTrace();
-                } catch (Settings.DirectoryException e) {
-                    e.printStackTrace();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                } catch (Settings.FileNameIllegalState fnise) {
+                    fnise.printStackTrace();
+                } catch (Settings.DirectoryException de) {
+                    de.printStackTrace();
                 }
 
                 btnRecorder.setText("recording");
@@ -99,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
         switch (tag) {
             case "play":
+                player.prepare(recorder.getSettings().getAbsolutePath());
                 player.play();
                 btnPlay.setTag("pause");
                 break;

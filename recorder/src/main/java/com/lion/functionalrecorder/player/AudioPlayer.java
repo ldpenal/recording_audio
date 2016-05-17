@@ -16,6 +16,7 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
     private MediaPlayer mediaPlayer;
     private PlayerListener playerListener;
     private AudioManager audioManager;
+    private String dataSource;
 
     private final float volume = 1.0f;
     private final float minValue = 0.2f;
@@ -30,6 +31,8 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
+        dataSource = url;
+
         try {
             mediaPlayer.setDataSource(url);
         } catch (IOException e) {
@@ -42,11 +45,12 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
             e.printStackTrace();
         }
 
-        // mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-
+                if (playerListener != null) {
+                    playerListener.onFinishPlayBack();
+                }
             }
         });
     }
@@ -74,6 +78,10 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
         }
     }
 
+    public boolean isPlaying() {
+        return (mediaPlayer != null) ? mediaPlayer.isPlaying() : false;
+    }
+
     @Override
     public void onAudioFocusChange(int focusChange) {
         switch (focusChange) {
@@ -89,13 +97,15 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                if (mediaPlayer.isPlaying())
+                if (mediaPlayer != null && mediaPlayer.isPlaying())
                     mediaPlayer.pause();
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.setVolume(minValue, minValue);
+                if (audioManager != null) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.setVolume(minValue, minValue);
+                    }
                 }
                 break;
         }
@@ -107,8 +117,14 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
     }
 
     public void pause() {
-        if (mediaPlayer.isPlaying()) {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+        }
+    }
+
+    public void stop() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
         }
     }
 
@@ -122,9 +138,15 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
     }
 
     public void onDestroy() {
-        mediaPlayer.release();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
         mediaPlayer = null;
         audioManager = null;
+    }
+
+    public String getDataSource() {
+        return dataSource;
     }
 
     interface PlayerListener {

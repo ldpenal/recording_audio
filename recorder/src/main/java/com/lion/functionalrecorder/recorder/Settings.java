@@ -1,11 +1,5 @@
 package com.lion.functionalrecorder.recorder;
 
-import android.util.Log;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Date;
-
 /**
  * Created by lion on 5/11/16.
  */

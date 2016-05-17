@@ -2,6 +2,7 @@ package com.lion.functionalrecorder.recorder;
 
 import android.media.MediaRecorder;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -73,11 +74,18 @@ public class Recorder {
 
     public void onDestroy() {
         try {
-            mediaRecorder.release();
+            if (isRecording) {
+                stopRecording();
+
+                File tmp = new File(settings.getAbsolutePath());
+                if (tmp.exists()) {
+                    boolean deleted = tmp.delete();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
             settings = null;
-            mediaRecorder = null;
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
