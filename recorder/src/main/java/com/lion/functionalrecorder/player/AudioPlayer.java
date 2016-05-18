@@ -183,6 +183,16 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
         this.data = data;
     }
 
+    public static int timeToPercent(int timeX, int totalDuration) {
+        int percent = (timeX * 100) / totalDuration;
+        return percent;
+    }
+
+    public static int percentToTime(int percent, int totalDuration) {
+        int time = (totalDuration * percent) / 100;
+        return time;
+    }
+
     public interface PlayerListener<D> {
         void onFinishPlayBack(D data);
         void onPausedPlayBack(D data);
