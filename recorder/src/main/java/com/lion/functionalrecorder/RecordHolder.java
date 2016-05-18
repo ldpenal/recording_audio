@@ -54,7 +54,6 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
         countDownTimer = new CountDownTimer(time, 100) {
             @Override
             public void onTick(long millisUntilFinished) {
-                Log.d(TAG, "onTick: millisUntilFinished " + millisUntilFinished);
                 int timeElapsed = (int) (item.duration - millisUntilFinished);
                 int progress = (int) Math.ceil((timeElapsed * 100) / item.duration);
 
