@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by lion on 5/16/16.
  */
-public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener {
+public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener {
 
     private MediaPlayer mediaPlayer;
     private PlayerListener playerListener;
@@ -21,15 +21,21 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
     private final float volume = 1.0f;
     private final float minValue = 0.2f;
 
+    private T data;
+
+    public static final String TAG_PLAY = "play";
+    public static final String TAG_PAUSE = "pause";
+    public static final String TAG_STOP = "stop";
+
     public AudioPlayer(@NonNull Context context, @Nullable PlayerListener playerListener) {
         this.playerListener = playerListener;
 
+        mediaPlayer = new MediaPlayer();
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     public void prepare(String url) {
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.reset();
 
         dataSource = url;
 
@@ -38,6 +44,8 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
         try {
             mediaPlayer.prepare();
@@ -49,7 +57,7 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
             @Override
             public void onCompletion(MediaPlayer mp) {
                 if (playerListener != null) {
-                    playerListener.onFinishPlayBack();
+                    playerListener.onFinishPlayBack(getData());
                 }
             }
         });
@@ -73,8 +81,12 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
             if (mediaPlayer.isPlaying())
                 mediaPlayer.pause();
         } else {
-            if (!mediaPlayer.isPlaying())
+            if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
+                if (playerListener != null) {
+                    playerListener.onStartPlayBack(data, mediaPlayer.getDuration());
+                }
+            }
         }
     }
 
@@ -93,7 +105,11 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS:
-                release();
+                try {
+                    pause();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
 
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
@@ -119,21 +135,30 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
     public void pause() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+            if (playerListener != null)
+                playerListener.onPausedPlayBack(data);
         }
     }
 
     public void stop() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
+
+            if (playerListener != null)
+                playerListener.onStoppedPlayBack(data);
         }
     }
 
     public void seek(int x) {
-        int tmills = mediaPlayer.getDuration();
-        int pos = (int) Math.ceil((tmills * x) / 100);
+        int timeMillis = mediaPlayer.getDuration();
+        int pos = (int) Math.ceil((timeMillis * x) / 100);
 
         if (mediaPlayer != null) {
             mediaPlayer.seekTo(pos);
+
+            if (playerListener != null) {
+                playerListener.onUpdateSeek(data);
+            }
         }
     }
 
@@ -143,13 +168,26 @@ public class AudioPlayer implements AudioManager.OnAudioFocusChangeListener, Med
         }
         mediaPlayer = null;
         audioManager = null;
+        playerListener = null;
     }
 
     public String getDataSource() {
         return dataSource;
     }
 
-    interface PlayerListener {
-        void onFinishPlayBack();
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public interface PlayerListener<D> {
+        void onFinishPlayBack(D data);
+        void onPausedPlayBack(D data);
+        void onStoppedPlayBack(D data);
+        void onStartPlayBack(D data, int totalDuration);
+        void onUpdateSeek(D data);
     }
 }

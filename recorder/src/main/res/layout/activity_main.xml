@@ -22,7 +22,7 @@
         android:layout_below="@id/tv_state"
         android:layout_centerHorizontal="true"
         android:orientation="horizontal"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <Button
             android:id="@+id/btn_recorder"
@@ -47,13 +47,18 @@
         android:layout_below="@id/ll_actions"
         android:orientation="vertical">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_test"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/srl_refresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:listitem="@layout/item_record">
+            android:layout_height="match_parent">
 
-        </android.support.v7.widget.RecyclerView>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_test"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/item_record" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 

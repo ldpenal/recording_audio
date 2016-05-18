@@ -3,15 +3,15 @@ package com.lion.functionalrecorder;
 /**
  * Created by lion on 5/16/16.
  */
-public class Item {
+public class Item extends BaseItem {
     public String url;
     public String title;
-    public int currentPosition;
 
     public Item(String title, String url) {
         this.title = title;
         this.url = url;
         this.currentPosition = 0;
+        this.isPlaying = false;
     }
 
     public long getCurrentPosition() {
@@ -36,5 +36,13 @@ public class Item {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public String toString() {
+        return "URL: " + url + "\n" +
+                "TITLE: " + title + "\n" +
+                "DURATION: " + duration + "\n" +
+                "CURRENT: " + currentPosition + "\n";
     }
 }

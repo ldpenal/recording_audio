@@ -1,13 +1,12 @@
 package com.lion.functionalrecorder;
 
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.lion.functionalrecorder.player.AudioPlayer;
@@ -17,23 +16,22 @@ import com.lion.functionalrecorder.recorder.Recorder;
 import com.lion.functionalrecorder.recorder.Settings;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, AudioPlayer.PlayerListener<Item> {
 
     @BindView(R.id.tv_state) TextView tvState;
-    @BindView(R.id.btn_recorder) Button btnRecorder;
-    @BindView(R.id.btn_play) Button btnPlay;
+//    @BindView(R.id.btn_recorder) Button btnRecorder;
+//    @BindView(R.id.btn_play) Button btnPlay;
     @BindView(R.id.rv_test) RecyclerView rvTests;
+    @BindView(R.id.srl_refresh) SwipeRefreshLayout swipeRefreshLayout;
 
     private Recorder recorder;
     private Settings.Builder recorderSettings;
-    private AudioPlayer player;
+    private AudioPlayer<Item> player;
 
     private String file = Environment.getExternalStorageDirectory().getAbsolutePath().concat("/Documents");
 
@@ -49,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         initRecycler();
         loadUrls();
 
+        swipeRefreshLayout.setOnRefreshListener(this);
+
         recorder = new Recorder();
         recorderSettings= new Settings.Builder()
                 .channelsAmount(AudioChannel.STEREO)
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 .samplingBitRate(AudioBitRate.SAMPLING_48khz)
                 .filePath(file);
 
-        player = new AudioPlayer(this, null);
+        player = new AudioPlayer(this, this);
     }
 
     private void loadUrls() {
@@ -76,13 +76,35 @@ public class MainActivity extends AppCompatActivity {
         adapter = new Adapter(new RecordHolder.ItemClicked() {
             @Override
             public void play(int percentage, int position) {
+                Item item = adapter.getItems().get(position);
+
+                ArrayList<Item> items = adapter.getItems();
+
+                for (Item aux : items) {
+                    if (!aux.equals(item)) {
+                        aux.isPlaying = false;
+                        aux.startSliding = false;
+                    }
+                }
+
+                adapter.notifyDataSetChanged();
+
+                player.prepare(item.getUrl());
+                player.seek(percentage);
+                player.setData(item);
+                player.play();
+            }
+
+            @Override
+            public void pause() {
                 if (player.isPlaying()) {
                     player.stop();
                 }
+            }
 
-                player.prepare(adapter.getItems().get(position).getUrl());
-                player.seek(percentage);
-                player.play();
+            @Override
+            public void seekTo(int position) {
+                player.seek(position);
             }
 
             @Override
@@ -114,52 +136,106 @@ public class MainActivity extends AppCompatActivity {
         recorder.onDestroy();
     }
 
-    @OnClick(R.id.btn_recorder)
-    public void onRecorderClicked(View v) {
-        String tag = (String) v.getTag();
+//    @OnClick(R.id.btn_recorder)
+//    public void onRecorderClicked(View v) {
+//        String tag = (String) v.getTag();
+//
+//        switch (tag) {
+//            case "record":
+//                try {
+//                    recorder.prepare(recorderSettings.build());
+//                } catch (IOException ioe) {
+//                    ioe.printStackTrace();
+//                } catch (Settings.FileNameIllegalState fnise) {
+//                    fnise.printStackTrace();
+//                } catch (Settings.DirectoryException de) {
+//                    de.printStackTrace();
+//                }
+//
+//                btnRecorder.setText("recording");
+//                btnRecorder.setTag("recording");
+//
+//                recorder.startRecording();
+//                break;
+//
+//            case "recording":
+//                btnRecorder.setText("record");
+//                btnRecorder.setTag("record");
+//
+//                recorder.stopRecording();
+//                break;
+//        }
+//    }
+//
+//    @OnClick(R.id.btn_play)
+//    public void onClick(View v) {
+//        String tag = (String) v.getTag();
+//
+//        switch (tag) {
+//            case "play":
+//                player.prepare(recorder.getSettings().getAbsolutePath());
+//                player.play();
+//                btnPlay.setTag("pause");
+//                break;
+//
+//            case "pause":
+//                player.pause();
+//                btnPlay.setTag("play");
+//                break;
+//        }
+//    }
 
-        switch (tag) {
-            case "record":
-                try {
-                    recorder.prepare(recorderSettings.build());
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                } catch (Settings.FileNameIllegalState fnise) {
-                    fnise.printStackTrace();
-                } catch (Settings.DirectoryException de) {
-                    de.printStackTrace();
-                }
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(false);
+        loadUrls();
+    }
 
-                btnRecorder.setText("recording");
-                btnRecorder.setTag("recording");
+    @Override
+    public void onFinishPlayBack(Item data) {
+        int index = indexOf(data);
+        Log.d("ldpenal", "onFinishPlayBack: finished");
 
-                recorder.startRecording();
-                break;
-
-            case "recording":
-                btnRecorder.setText("record");
-                btnRecorder.setTag("record");
-
-                recorder.stopRecording();
-                break;
+        if (index != -1) {
+            data.currentPosition = 0;
+            data.isPlaying = false;
+            updateElement(index, data);
         }
     }
 
-    @OnClick(R.id.btn_play)
-    public void onClick(View v) {
-        String tag = (String) v.getTag();
+    @Override
+    public void onPausedPlayBack(Item data) {
+        int index = indexOf(data);
+        data.isPlaying = false;
+        updateElement(index, data);
+    }
 
-        switch (tag) {
-            case "play":
-                player.prepare(recorder.getSettings().getAbsolutePath());
-                player.play();
-                btnPlay.setTag("pause");
-                break;
+    @Override
+    public void onStoppedPlayBack(Item data) {
+    }
 
-            case "pause":
-                player.pause();
-                btnPlay.setTag("play");
-                break;
-        }
+    @Override
+    public void onStartPlayBack(Item data, int duration) {
+        int index = indexOf(data);
+
+        data.isPlaying = true;
+        data.startSliding = true;
+        data.duration = duration;
+
+        updateElement(index, data);
+    }
+
+    @Override
+    public void onUpdateSeek(Item data) {
+        int index = indexOf(data);
+    }
+
+    public int indexOf(Item item) {
+        return adapter.getItems().indexOf(item);
+    }
+
+    public void updateElement(int index, Item data) {
+        adapter.getItems().set(index, data);
+        adapter.notifyItemChanged(index);
     }
 }
