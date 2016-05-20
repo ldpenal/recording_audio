@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (player != null) {
             player.pause();
         }
-        recorder.onDestroy();
+        recorder.onPause();
     }
 
     @OnClick(R.id.btn_recorder)

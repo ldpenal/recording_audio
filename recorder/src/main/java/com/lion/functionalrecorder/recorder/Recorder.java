@@ -16,6 +16,7 @@ public class Recorder {
     private boolean isRecording = false;
 
     public Recorder() {
+        mediaRecorder = new MediaRecorder();
     }
 
     public void prepare(Settings settings) throws IllegalStateException, IOException {
@@ -24,8 +25,6 @@ public class Recorder {
         }
 
         this.settings = settings;
-
-        mediaRecorder = new MediaRecorder();
 
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -64,8 +63,9 @@ public class Recorder {
                 prepared = false;
 
                 mediaRecorder.stop();
-                mediaRecorder.release();
-                mediaRecorder = null;
+                mediaRecorder.reset();
+                // mediaRecorder.release();
+                // mediaRecorder = null;
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -79,13 +79,21 @@ public class Recorder {
 
                 File tmp = new File(settings.getAbsolutePath());
                 if (tmp.exists()) {
-                    boolean deleted = tmp.delete();
+                    tmp.delete();
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            mediaRecorder.release();
+            mediaRecorder = null;
             settings = null;
+        }
+    }
+
+    public void onPause() {
+        if (isRecording) {
+            stopRecording();
         }
     }
 
