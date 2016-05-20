@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import com.lion.functionalrecorder.model.BaseItem;
 import com.lion.functionalrecorder.listeners.PositionListener;
+import com.lion.functionalrecorder.model.BaseItem;
 
 /**
  * Created by lion on 5/20/16.

@@ -8,10 +8,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.lion.functionalrecorder.Item;
 import com.lion.functionalrecorder.broadcasts.PlaybackProgressReceiver;
 import com.lion.functionalrecorder.model.BaseItem;
-import com.lion.functionalrecorder.Item;
-import com.lion.functionalrecorder.RecordHolder;
 
 import java.io.IOException;
 import java.util.Timer;
