@@ -6,6 +6,8 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.lion.functionalrecorder.player.AudioPlayer;
@@ -15,16 +17,18 @@ import com.lion.functionalrecorder.recorder.Recorder;
 import com.lion.functionalrecorder.recorder.Settings;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, AudioPlayer.PlayerListener<Item> {
 
     @BindView(R.id.tv_state) TextView tvState;
-//    @BindView(R.id.btn_recorder) Button btnRecorder;
-//    @BindView(R.id.btn_play) Button btnPlay;
+    @BindView(R.id.btn_recorder) Button btnRecorder;
+    @BindView(R.id.btn_play) Button btnPlay;
     @BindView(R.id.rv_test) RecyclerView rvTests;
     @BindView(R.id.srl_refresh) SwipeRefreshLayout swipeRefreshLayout;
 
@@ -63,8 +67,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         ArrayList<Item> items = new ArrayList<>();
 
         for (File f: files) {
-            Item item = new Item(f.getName(), f.getAbsolutePath());
-            items.add(item);
+            if (f.getName().contains(".mp4")) {
+                Item item = new Item(f.getName(), f.getAbsolutePath());
+                items.add(item);
+            } else {
+                continue;
+            }
         }
 
         adapter.addItems(items);
@@ -135,54 +143,54 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         recorder.onDestroy();
     }
 
-//    @OnClick(R.id.btn_recorder)
-//    public void onRecorderClicked(View v) {
-//        String tag = (String) v.getTag();
-//
-//        switch (tag) {
-//            case "record":
-//                try {
-//                    recorder.prepare(recorderSettings.build());
-//                } catch (IOException ioe) {
-//                    ioe.printStackTrace();
-//                } catch (Settings.FileNameIllegalState fnise) {
-//                    fnise.printStackTrace();
-//                } catch (Settings.DirectoryException de) {
-//                    de.printStackTrace();
-//                }
-//
-//                btnRecorder.setText("recording");
-//                btnRecorder.setTag("recording");
-//
-//                recorder.startRecording();
-//                break;
-//
-//            case "recording":
-//                btnRecorder.setText("record");
-//                btnRecorder.setTag("record");
-//
-//                recorder.stopRecording();
-//                break;
-//        }
-//    }
-//
-//    @OnClick(R.id.btn_play)
-//    public void onClick(View v) {
-//        String tag = (String) v.getTag();
-//
-//        switch (tag) {
-//            case "play":
-//                player.prepare(recorder.getSettings().getAbsolutePath());
-//                player.play();
-//                btnPlay.setTag("pause");
-//                break;
-//
-//            case "pause":
-//                player.pause();
-//                btnPlay.setTag("play");
-//                break;
-//        }
-//    }
+    @OnClick(R.id.btn_recorder)
+    public void onRecorderClicked(View v) {
+        String tag = (String) v.getTag();
+
+        switch (tag) {
+            case "record":
+                try {
+                    recorder.prepare(recorderSettings.build());
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                } catch (Settings.FileNameIllegalState fnise) {
+                    fnise.printStackTrace();
+                } catch (Settings.DirectoryException de) {
+                    de.printStackTrace();
+                }
+
+                btnRecorder.setText("recording");
+                btnRecorder.setTag("recording");
+
+                recorder.startRecording();
+                break;
+
+            case "recording":
+                btnRecorder.setText("record");
+                btnRecorder.setTag("record");
+
+                recorder.stopRecording();
+                break;
+        }
+    }
+
+    @OnClick(R.id.btn_play)
+    public void onClick(View v) {
+        String tag = (String) v.getTag();
+
+        switch (tag) {
+            case "play":
+                player.prepare(recorder.getSettings().getAbsolutePath());
+                player.play();
+                btnPlay.setTag("pause");
+                break;
+
+            case "pause":
+                player.pause();
+                btnPlay.setTag("play");
+                break;
+        }
+    }
 
     @Override
     public void onRefresh() {

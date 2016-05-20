@@ -22,7 +22,7 @@
         android:layout_below="@id/tv_state"
         android:layout_centerHorizontal="true"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <Button
             android:id="@+id/btn_recorder"
