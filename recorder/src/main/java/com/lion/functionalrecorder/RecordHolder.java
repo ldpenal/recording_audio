@@ -1,12 +1,14 @@
 package com.lion.functionalrecorder;
 
+import android.content.BroadcastReceiver;
 import android.os.CountDownTimer;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 
+import com.lion.functionalrecorder.broadcasts.PlaybackProgressReceiver;
+import com.lion.functionalrecorder.listeners.PositionListener;
 import com.lion.functionalrecorder.player.AudioPlayer;
 
 import butterknife.BindView;
@@ -23,6 +25,7 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
     private Item item;
     private ItemClicked eventListener;
     private CountDownTimer countDownTimer;
+    private BroadcastReceiver broadcastReceiver;
 
     @BindView(R.id.sb_position) SeekBar sbPosition;
     @BindView(R.id.btn_play) ImageButton btnPlay;
@@ -35,44 +38,60 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
         sbPosition.setOnSeekBarChangeListener(this);
     }
 
-    public void bind(Item item) {
+    public void bind(final Item item) {
         this.item = item;
         clean();
 
-        sbPosition.setProgress(item.currentPosition);
+        broadcastReceiver = new PlaybackProgressReceiver<Item>(item, new PositionListener() {
+            @Override
+            public void forceUpdate() {
+                if (item.getCurrentPosition() >= sbPosition.getProgress()) {
+                    sbPosition.setProgress(item.getCurrentPosition());
+                }
+            }
+        });
+
+        sbPosition.setProgress(item.getCurrentPosition());
         updateUI();
 
-        if (item.startSliding && item.isPlaying) {
-            update();
+        if (item.isStartSliding() && item.isPlaying()) {
+            itemView.getContext().registerReceiver(broadcastReceiver, PlaybackProgressReceiver.INTENT_FILTER);
         }
     }
 
-    private void update() {
-        int restingProgress = 100 - item.currentPosition;
-        int time = (restingProgress * item.duration) / 100;
-
-        countDownTimer = new CountDownTimer(time, 100) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int timeElapsed = (int) (item.duration - millisUntilFinished);
-                int progress = (int) Math.ceil((timeElapsed * 100) / item.duration);
-
-                item.currentPosition = progress;
-                sbPosition.setProgress(item.currentPosition);
-            }
-
-            @Override
-            public void onFinish() {
-                clean();
-                item.currentPosition = 0;
-            }
-        };
-
-        countDownTimer.start();
-    }
+//    private void update() {
+//        int restingProgress = 100 - item.currentPosition;
+//        int time = (restingProgress * item.duration) / 100;
+//
+//        countDownTimer = new CountDownTimer(time, 100) {
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+//                int timeElapsed = (int) (item.duration - millisUntilFinished);
+//                int progress = (int) Math.ceil((timeElapsed * 100) / item.duration);
+//
+//                item.currentPosition = progress;
+//                sbPosition.setProgress(item.currentPosition);
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//                clean();
+//                item.currentPosition = 0;
+//            }
+//        };
+//
+//        countDownTimer.start();
+//    }
 
     private void clean() {
         stopCounter();
+
+        if (broadcastReceiver != null) {
+            try {
+                itemView.getContext().unregisterReceiver(broadcastReceiver);
+            } catch (Exception ex) {
+            }
+        }
     }
 
     private void stopCounter() {
@@ -90,9 +109,9 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
         switch (tag) {
             case AudioPlayer.TAG_PLAY:
                 if (canCallPlayer) {
-                    item.currentPosition = sbPosition.getProgress();
-                    eventListener.play(item.currentPosition, getAdapterPosition());
-                    item.isPlaying = true;
+                    item.setCurrentPosition(sbPosition.getProgress());
+                    eventListener.play(item.getCurrentPosition(), getAdapterPosition());
+                    item.setPlaying(true);
                     updateUI();
                 }
                 break;
@@ -100,7 +119,7 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
             case AudioPlayer.TAG_PAUSE:
                 if (canCallPlayer) {
                     eventListener.pause();
-                    item.isPlaying = false;
+                    item.setPlaying(false);
                     stopCounter();
                     updateUI();
                 }
@@ -110,13 +129,12 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        item.currentPosition = progress;
+        item.setCurrentPosition(progress);
 
         if (fromUser) {
-            if (item.isPlaying) {
-                eventListener.seekTo(item.currentPosition);
+            if (item.isPlaying()) {
+                eventListener.seekTo(item.getCurrentPosition());
                 stopCounter();
-                update();
             }
         }
     }
@@ -130,7 +148,7 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
     }
 
     protected void updateUI() {
-        if (item.isPlaying) {
+        if (item.isPlaying()) {
             btnPlay.setImageResource(android.R.drawable.ic_media_pause);
             btnPlay.setTag(AudioPlayer.TAG_PAUSE);
         } else {
@@ -147,6 +165,7 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
         void play(int percentage, int position);
         void pause();
         void seekTo(int position);
-        void removeIfPlaying(Item item);
     }
+
+
 }

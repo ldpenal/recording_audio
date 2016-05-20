@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout.setOnRefreshListener(this);
 
         recorder = new Recorder();
-        recorderSettings= new Settings.Builder()
+        recorderSettings = new Settings.Builder()
                 .channelsAmount(AudioChannel.STEREO)
                 .encodingBitRate(AudioBitRate.ENCODING_HIGH)
                 .samplingBitRate(AudioBitRate.SAMPLING_48khz)
@@ -63,10 +63,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void loadUrls() {
-        File [] files = new File(file).listFiles();
+        File[] files = new File(file).listFiles();
         ArrayList<Item> items = new ArrayList<>();
 
-        for (File f: files) {
+        for (File f : files) {
             if (f.getName().contains(".mp4")) {
                 Item item = new Item(f.getName(), f.getAbsolutePath());
                 items.add(item);
@@ -89,8 +89,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
                 for (Item aux : items) {
                     if (!aux.equals(item)) {
-                        aux.isPlaying = false;
-                        aux.startSliding = false;
+                        aux.setPlaying(false);
+                        aux.setStartSliding(false);
                     }
                 }
 
@@ -112,13 +112,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             @Override
             public void seekTo(int position) {
                 player.seek(position);
-            }
-
-            @Override
-            public void removeIfPlaying(Item item) {
-                if (player.isPlaying() && item.getUrl().equals(player.getDataSource())) {
-                    player.stop();
-                }
             }
         });
 
@@ -200,14 +193,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onFinishPlayBack(Item data) {
-            data.currentPosition = 0;
-            data.isPlaying = false;
-            adapter.updateItem(data);
+        adapter.updateItem(data);
     }
 
     @Override
     public void onPausedPlayBack(Item data) {
-        data.isPlaying = false;
         adapter.updateItem(data);
     }
 
@@ -216,11 +206,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     @Override
-    public void onStartPlayBack(Item data, int duration) {
-        data.isPlaying = true;
-        data.startSliding = true;
-        data.duration = duration;
-
+    public void onStartPlayBack(Item data) {
         adapter.updateItem(data);
     }
 

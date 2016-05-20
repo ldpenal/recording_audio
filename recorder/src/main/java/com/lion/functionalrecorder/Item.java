@@ -1,25 +1,19 @@
 package com.lion.functionalrecorder;
 
+import com.lion.functionalrecorder.model.BaseItem;
+
 /**
  * Created by lion on 5/16/16.
  */
 public class Item extends BaseItem {
-    public String url;
     public String title;
 
     public Item(String title, String url) {
-        this.title = title;
-        this.url = url;
-        this.currentPosition = 0;
-        this.isPlaying = false;
-    }
-
-    public long getCurrentPosition() {
-        return currentPosition;
-    }
-
-    public void setCurrentPosition(int currentPosition) {
-        this.currentPosition = currentPosition;
+        super();
+        setTitle(title);
+        setUrl(url);
+        setCurrentPosition(0);
+        setPlaying(false);
     }
 
     public String getTitle() {
@@ -30,19 +24,11 @@ public class Item extends BaseItem {
         this.title = title;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
     @Override
     public String toString() {
         return "URL: " + url + "\n" +
                 "TITLE: " + title + "\n" +
-                "DURATION: " + duration + "\n" +
-                "CURRENT: " + currentPosition + "\n";
+                "DURATION: " + getDuration() + "\n" +
+                "CURRENT: " + getCurrentPosition() + "\n";
     }
 }

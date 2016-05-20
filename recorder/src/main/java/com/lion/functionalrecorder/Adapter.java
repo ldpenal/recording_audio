@@ -62,4 +62,11 @@ public class Adapter extends RecyclerView.Adapter<RecordHolder> {
 
         return  null;
     }
+
+//    @Override
+//    public void onViewDetachedFromWindow(RecordHolder holder) {
+//        super.onViewDetachedFromWindow(holder);
+//        itemClicked.removeIfPlaying(holder.getItem());
+//        // TODO: 5/16/16  make things happen;
+//    }
 }

@@ -1,22 +1,35 @@
 package com.lion.functionalrecorder.player;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.lion.functionalrecorder.broadcasts.PlaybackProgressReceiver;
+import com.lion.functionalrecorder.model.BaseItem;
+import com.lion.functionalrecorder.Item;
+import com.lion.functionalrecorder.RecordHolder;
+
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by lion on 5/16/16.
  */
-public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener {
+public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener {
 
+    private final Context context;
     private MediaPlayer mediaPlayer;
     private PlayerListener playerListener;
     private AudioManager audioManager;
     private String dataSource;
+
+    private Timer timer;
+    private TimerTask timerTask;
 
     private final float volume = 1.0f;
     private final float minValue = 0.2f;
@@ -27,8 +40,12 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
     public static final String TAG_PAUSE = "pause";
     public static final String TAG_STOP = "stop";
 
+    private final long CHECK_INTERVAL = 100;
+    private final long DELAY = CHECK_INTERVAL;
+
     public AudioPlayer(@NonNull Context context, @Nullable PlayerListener playerListener) {
         this.playerListener = playerListener;
+        this.context = context;
 
         mediaPlayer = new MediaPlayer();
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -56,9 +73,15 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                if (playerListener != null) {
-                    playerListener.onFinishPlayBack(getData());
+                timer.cancel();
+
+                if (data != null) {
+                    data.setCurrentPosition(0);
+                    data.setPlaying(false);
                 }
+
+                if (playerListener != null)
+                    playerListener.onFinishPlayBack(getData());
             }
         });
     }
@@ -72,6 +95,24 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
     }
 
     public void play() {
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (mediaPlayer != null) {
+                    Bundle extras = new Bundle();
+                    extras.putString(PlaybackProgressReceiver.CURRENT_URL, ((Item) data).getUrl());
+                    extras.putInt(PlaybackProgressReceiver.CURRENT_POSITION, timeToPercent(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration()));
+
+                    Intent intent = new Intent(PlaybackProgressReceiver.ACTION_FILTER);
+                    intent.putExtras(extras);
+                    context.sendBroadcast(intent);
+                }
+            }
+        };
+
+        timer = new Timer();
+        timer.schedule(timerTask, DELAY, CHECK_INTERVAL);
+
         int result = 0;
 
         if (audioManager != null)
@@ -83,8 +124,12 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
         } else {
             if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
+
                 if (playerListener != null) {
-                    playerListener.onStartPlayBack(data, mediaPlayer.getDuration());
+                    data.setPlaying(true);
+                    data.setStartSliding(true);
+                    data.setDuration(mediaPlayer.getDuration());
+                    playerListener.onStartPlayBack(data);
                 }
             }
         }
@@ -133,14 +178,23 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
     }
 
     public void pause() {
+        timer.cancel();
+
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+
+            if (data != null) {
+                data.setPlaying(false);
+            }
+
             if (playerListener != null)
                 playerListener.onPausedPlayBack(data);
         }
     }
 
     public void stop() {
+        timer.cancel();
+
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
 
@@ -163,6 +217,8 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
     }
 
     public void onDestroy() {
+        timer.cancel();
+
         if (mediaPlayer != null) {
             mediaPlayer.release();
         }
@@ -197,7 +253,7 @@ public class AudioPlayer<T> implements AudioManager.OnAudioFocusChangeListener, 
         void onFinishPlayBack(D data);
         void onPausedPlayBack(D data);
         void onStoppedPlayBack(D data);
-        void onStartPlayBack(D data, int totalDuration);
+        void onStartPlayBack(D data);
         void onUpdateSeek(D data);
     }
 }
