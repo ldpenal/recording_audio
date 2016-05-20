@@ -6,7 +6,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.lion.functionalrecorder.player.AudioPlayer;
@@ -76,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         adapter = new Adapter(new RecordHolder.ItemClicked() {
             @Override
             public void play(int percentage, int position) {
-                Item item = adapter.getItems().get(position);
+                Item item = adapter.getItem(position);
 
                 ArrayList<Item> items = adapter.getItems();
 
@@ -193,21 +192,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onFinishPlayBack(Item data) {
-        int index = indexOf(data);
-        Log.d("ldpenal", "onFinishPlayBack: finished");
-
-        if (index != -1) {
             data.currentPosition = 0;
             data.isPlaying = false;
-            updateElement(index, data);
-        }
+            adapter.updateItem(data);
     }
 
     @Override
     public void onPausedPlayBack(Item data) {
-        int index = indexOf(data);
         data.isPlaying = false;
-        updateElement(index, data);
+        adapter.updateItem(data);
     }
 
     @Override
@@ -216,26 +209,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onStartPlayBack(Item data, int duration) {
-        int index = indexOf(data);
-
         data.isPlaying = true;
         data.startSliding = true;
         data.duration = duration;
 
-        updateElement(index, data);
+        adapter.updateItem(data);
     }
 
     @Override
     public void onUpdateSeek(Item data) {
-        int index = indexOf(data);
-    }
-
-    public int indexOf(Item item) {
-        return adapter.getItems().indexOf(item);
-    }
-
-    public void updateElement(int index, Item data) {
-        adapter.getItems().set(index, data);
-        adapter.notifyItemChanged(index);
+        // int index = indexOf(data);
     }
 }

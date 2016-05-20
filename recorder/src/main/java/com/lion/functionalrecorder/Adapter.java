@@ -1,7 +1,6 @@
 package com.lion.functionalrecorder;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,10 +46,20 @@ public class Adapter extends RecyclerView.Adapter<RecordHolder> {
         return items;
     }
 
-//    @Override
-//    public void onViewDetachedFromWindow(RecordHolder holder) {
-//        super.onViewDetachedFromWindow(holder);
-//        itemClicked.removeIfPlaying(holder.getItem());
-//        // TODO: 5/16/16  make things happen;
-//    }
+    public void updateItem(Item item) {
+        int indexOf = items.indexOf(item);
+
+        if (indexOf != -1) {
+            items.set(indexOf, item);
+            notifyItemChanged(indexOf);
+        }
+    }
+
+    public Item getItem(int position) {
+        if ((position > -1) && (position < items.size())) {
+            return items.get(position);
+        }
+
+        return  null;
+    }
 }
