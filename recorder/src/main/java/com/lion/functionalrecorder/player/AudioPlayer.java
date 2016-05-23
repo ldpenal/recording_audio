@@ -219,6 +219,7 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
 
     public void onDestroy() {
         cancelTimers();
+        leaveListeners();
 
         if (mediaPlayer != null) {
             mediaPlayer.release();
@@ -253,6 +254,12 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
     private void cancelTimers() {
         if (timer != null) {
             timer.cancel();
+        }
+    }
+
+    private void leaveListeners() {
+        if (audioManager != null) {
+            audioManager.abandonAudioFocus(this);
         }
     }
 
