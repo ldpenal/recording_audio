@@ -143,8 +143,10 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
         switch (focusChange) {
             case AudioManager.AUDIOFOCUS_GAIN:
                 if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.start();
-                    mediaPlayer.setVolume(volume, volume);
+                    if (data.isPlaying()) {
+                        mediaPlayer.start();
+                        mediaPlayer.setVolume(volume, volume);
+                    }
                 }
                 break;
 
