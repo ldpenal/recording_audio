@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.lion.functionalrecorder.model.BaseItem;
 import com.lion.functionalrecorder.player.AudioPlayer;
 import com.lion.functionalrecorder.recorder.AudioBitRate;
 import com.lion.functionalrecorder.recorder.AudioChannel;
@@ -84,8 +85,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void initRecycler() {
         adapter = new Adapter(new RecordHolder.ItemClicked() {
             @Override
-            public void play(int percentage, int position) {
-                Item item = adapter.getItem(position);
+            public void play(int percentage, BaseItem element) {
+                Item item = (Item) element;
 
                 ArrayList<Item> items = adapter.getItems();
 

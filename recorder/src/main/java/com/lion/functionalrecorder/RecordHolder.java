@@ -9,6 +9,7 @@ import android.widget.SeekBar;
 
 import com.lion.functionalrecorder.broadcasts.PlaybackProgressReceiver;
 import com.lion.functionalrecorder.listeners.PositionListener;
+import com.lion.functionalrecorder.model.BaseItem;
 import com.lion.functionalrecorder.player.AudioPlayer;
 
 import butterknife.BindView;
@@ -19,8 +20,6 @@ import butterknife.OnClick;
  * Created by lion on 5/16/16.
  */
 public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnSeekBarChangeListener {
-
-    private static final String TAG = "ldpenal";
 
     private Item item;
     private ItemClicked eventListener;
@@ -59,30 +58,6 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
         }
     }
 
-//    private void update() {
-//        int restingProgress = 100 - item.currentPosition;
-//        int time = (restingProgress * item.duration) / 100;
-//
-//        countDownTimer = new CountDownTimer(time, 100) {
-//            @Override
-//            public void onTick(long millisUntilFinished) {
-//                int timeElapsed = (int) (item.duration - millisUntilFinished);
-//                int progress = (int) Math.ceil((timeElapsed * 100) / item.duration);
-//
-//                item.currentPosition = progress;
-//                sbPosition.setProgress(item.currentPosition);
-//            }
-//
-//            @Override
-//            public void onFinish() {
-//                clean();
-//                item.currentPosition = 0;
-//            }
-//        };
-//
-//        countDownTimer.start();
-//    }
-
     private void clean() {
         stopCounter();
 
@@ -110,7 +85,7 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
             case AudioPlayer.TAG_PLAY:
                 if (canCallPlayer) {
                     item.setCurrentPosition(sbPosition.getProgress());
-                    eventListener.play(item.getCurrentPosition(), getAdapterPosition());
+                    eventListener.play(item.getCurrentPosition(), item);
                     item.setPlaying(true);
                     updateUI();
                 }
@@ -162,10 +137,8 @@ public class RecordHolder extends RecyclerView.ViewHolder implements SeekBar.OnS
     }
 
     interface ItemClicked {
-        void play(int percentage, int position);
-
+        void play(int percentage, BaseItem position);
         void pause();
-
         void seekTo(int position);
     }
 }
