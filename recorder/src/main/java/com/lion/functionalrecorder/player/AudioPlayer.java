@@ -72,7 +72,7 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                timer.cancel();
+                cancelTimers();
 
                 if (data != null) {
                     data.setCurrentPosition(0);
@@ -177,7 +177,7 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
     }
 
     public void pause() {
-        timer.cancel();
+        cancelTimers();
 
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
@@ -192,7 +192,7 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
     }
 
     public void stop() {
-        timer.cancel();
+        cancelTimers();
 
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
@@ -216,7 +216,7 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
     }
 
     public void onDestroy() {
-        timer.cancel();
+        cancelTimers();
 
         if (mediaPlayer != null) {
             mediaPlayer.release();
@@ -246,6 +246,12 @@ public class AudioPlayer<T extends BaseItem> implements AudioManager.OnAudioFocu
     public static int percentToTime(int percent, int totalDuration) {
         int time = (totalDuration * percent) / 100;
         return time;
+    }
+
+    private void cancelTimers() {
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     public interface PlayerListener<D> {

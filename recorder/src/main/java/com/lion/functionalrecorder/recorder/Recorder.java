@@ -20,6 +20,7 @@ public class Recorder {
     }
 
     public void prepare(Settings settings) throws IllegalStateException, IOException {
+        // TODO: 5/23/16 check permissions of storage and so on;
         if (settings == null) {
             throw new IllegalStateException("Settings not provided to MediaRecord;");
         }

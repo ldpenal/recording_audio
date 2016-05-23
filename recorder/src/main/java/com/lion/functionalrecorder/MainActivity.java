@@ -66,12 +66,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         File[] files = new File(file).listFiles();
         ArrayList<Item> items = new ArrayList<>();
 
-        for (File f : files) {
-            if (f.getName().contains(".mp4")) {
-                Item item = new Item(f.getName(), f.getAbsolutePath());
-                items.add(item);
-            } else {
-                continue;
+        if (files != null) {
+            for (File f : files) {
+                if (f.getName().contains(".mp4")) {
+                    Item item = new Item(f.getName(), f.getAbsolutePath());
+                    items.add(item);
+                } else {
+                    continue;
+                }
             }
         }
 
